@@ -5,7 +5,9 @@ module.exports = {
         // ...
 
         config.externals = {
-            'AMap': 'AMap' // 高德地图配置
+            'AMap': 'AMap',
+            'Loca': 'Loca',
+            'AMapUI': 'AMapUI'
         }
     }
 }
