@@ -27,10 +27,11 @@ export const locationArr = [
 
 
 ]
-var cdatax=[],cdatay=[]
+var cdatax=[],cdatay=[],cdatay1=[]
 locationArr.forEach(item=>{
     cdatax.push(item.n)
     cdatay.push(item.p)
+    cdatay1.push(item.p-1233)
 })
 
 export const chartDataOption={
@@ -44,7 +45,14 @@ export const chartDataOption={
     tooltip: {
         trigger: 'axis'
     },
+    legend: {
+        data: ['二手房价', '新房价'],
+        textStyle: { //图例文字的样式
+            color: '#fff',
+            fontSize: 10
+        },
 
+    },
     toolbox: {
         show: true,
         feature: {
@@ -83,9 +91,17 @@ export const chartDataOption={
     },
 
     series: [{
-        data: cdatay,
+        name: '二手房价',
         type: 'line',
-        itemStyle : { normal: {label : {show: true}}},
-        areaStyle: {}
-    }]
+        stack: '总量',
+        areaStyle: { normal: {} },
+        data: cdatay
+    },
+        {
+            name: '新房价',
+            type: 'line',
+            stack: '总量',
+            areaStyle: { normal: {} },
+            data: cdatay1
+        }]
 }

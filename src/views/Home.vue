@@ -55,7 +55,7 @@
                 that.map = new AMap.Map('container', {
                     center: [120.05, 36.5],
                     mapStyle: 'amap://styles/37a3f303898c1642ec5e1aeab3e7ae95',
-                    zoom: 10,
+                    zoom: 10.5,
                     viewMode: '2D',
                     pitch: 50,
                     showZoomBar: true,
@@ -173,13 +173,13 @@
 <style>
     div#top {
         width: 100%;
-        height: 25vh;
+        height: 35vh;
         background: rgb(21, 23, 42);
     }
 
     #container {
         width: 100%;
-        height: 75vh;
+        height: 65vh;
     }
 
     .custom-content-marker {
