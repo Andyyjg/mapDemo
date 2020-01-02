@@ -22,7 +22,7 @@ export const locationArr = [
     {l: 113.73 , h: 34.40, p: 18893, n: '新郑市'},
     {l: 113.03, h: 34.47, p: 23645, n: '登封市'},
     {l: 113.97, h: 34.72, p: 37565, n: '中牟县'},
-    {l: 112.98 , h: 34.77, p: 78989, n: '巩义市'},
+    {l: 112.98 , h: 34.77, p: 68989, n: '巩义市'},
     {l: 113.40, h: 34.78, p: 58989, n: '荥阳市'},
     {l: 113.38 , h:34.53, p: 58989, n: '新密市'},
 
@@ -105,4 +105,7 @@ export const chartDataOption={
             areaStyle: { normal: {} },
             data: cdatay1
         }]
+}
+export const randomNum=function (minNum, maxNum) {
+    return parseInt(Math.random() * (maxNum - minNum + 1) + minNum, 10);
 }

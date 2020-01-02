@@ -9,13 +9,17 @@
         <!-- 图例 -->
         <div class="legend">
             <ul class="colors" id="legend-color">
-                <li class="color-item" v-for="(item,key) of colorArr" :style="{'background-color': item}" :key="key"></li>
+                <li class="color-item" v-for="(item,key) of colorArr" :style="{'background-color': item}"
+                    :key="key"></li>
             </ul>
             <ul class="labels" id="legend-label" style="padding: 0">
-                <li class="label-item" v-for="(item,key) of numRange" :key="key">{{item}}</li>`
+                <li class="label-item" v-for="(item,key) of numRange" :key="key">{{item}}</li>
+                `
             </ul>
         </div>
-        <img src="../assets/img/2.png" alt="" title="初始化地图" style="position: absolute;z-index: 1300;bottom: 70px;left: 15px;cursor:pointer;" width="50" @click="initmap">
+        <img src="../assets/img/2.png" alt="" title="初始化地图"
+             style="position: absolute;z-index: 1300;bottom: 70px;left: 15px;cursor:pointer;" width="50"
+             @click="initmap">
 
 
         <!--        <div class='input-card'>-->
@@ -80,10 +84,11 @@
     import AMapUI from 'AMapUI'
     import Loca from 'Loca'
     import chart from '../components/chart'
-    import {heatmapData, locationArr, chartDataOption} from '../lib/data'
-    var jsonData=require('../assets/json/grid')
-    jsonData.data.forEach((item,key)=>{
-        item.count=parseInt(Math.random(0,1)*10000+Math.random(0,1)*1000+Math.random(0,1)*100+Math.random(0,1)*10+key)
+    import {heatmapData, locationArr, chartDataOption, randomNum} from '../lib/data'
+
+    var jsonData = require('../assets/json/grid')
+    jsonData.data.forEach((item, key) => {
+        item.count = randomNum(0, 70000)
     })
     console.log(jsonData);
     // console.log('这是data',jsonData.data);
@@ -102,13 +107,14 @@
                 heatmapData,
                 locationArr,
                 receivableAccepted: chartDataOption,
-                colorArr:['rgb(33,38,59)', 'rgb(33,49,63)', 'rgb(49,43,45)', 'rgb(47,31,64)', 'rgb(43,33,49)', 'rgb(131,105,53)', 'rgb(122,26,34)'],
-                numRange:[0,10000,20000,30000,40000,50000,60000,70000]
+                colorArr:  ['#0868AC', '#43A2CA', '#43A2CA', '#7BCCC4', '#BAE4BC', '#F0F9E8', '#F0F9E8'],
+                numRange: [0, 10000, 20000, 30000, 40000, 50000, 60000, 70000]
 
 
             }
         },
         methods: {
+
             handleClose(done) {
                 done()
             },
@@ -150,7 +156,7 @@
                 that.map = new AMap.Map('container', {
                     center: centerPos,
                     mapStyle: 'amap://styles/37a3f303898c1642ec5e1aeab3e7ae95',
-                    zoom: 8,
+                    zoom: 9,
                     viewMode: '2D',
                     pitch: 50,
                     showZoomBar: true,
@@ -266,40 +272,9 @@
 
 
             },
-            addMaker() {
 
-            },
-            setheat(AMap) {
-
-                this.map.plugin(["AMap.Heatmap"], () => {
-                    //初始化heatmap对象
-                    let heatmap;
-                    heatmap = new AMap.Heatmap(this.map, {
-                        radius: 25, //给定半径
-                        opacity: [0, 0.8],
-                        gradient: {
-                            0.5: 'blue',
-                            0.65: 'rgb(117,211,248)',
-                            0.7: 'rgb(0, 255, 0)',
-                            0.9: '#ffea00',
-                            1.0: 'red'
-                        }
-                    });
-                    //设置数据集
-                    heatmap.setDataSet({
-                        data: this.heatmapData,
-                        max: 5
-                    });
-                });
-
-            },
             dealHeat() {
                 var that = this
-                // this.$axios.get('//a.amap.com/Loca/static/mock/qingdao_500m.tsv').then(
-                //     res => {
-                //
-                //     }
-                // )
                 var layer = new Loca.GridLayer({
                     map: that.map,
                     fitView: true
@@ -320,10 +295,10 @@
                     mode: 'count',
                     style: {
                         color: that.colorArr,
-                        radius: 600,
-                        opacity: 0.9,
-                        gap: 150,
-                        height: [10, 10],
+                        radius: 666,
+                        opacity: 0.2,
+                        gap: 200,
+                        height: [0, 0],
                         zIndex: 100
                     }
                 });
@@ -511,6 +486,7 @@
         background: #15172B !important;
 
     }
+
     .legend {
         z-index: 1300;
         position: fixed;
