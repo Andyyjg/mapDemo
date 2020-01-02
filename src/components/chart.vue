@@ -2,7 +2,7 @@
 
     <div id="pieChart" >
 
-        <div :id="echarts" class="echarts" ref="echarts" style="height: 32vh;width: 100%"></div>
+        <div :id="echarts" class="echarts" ref="echarts" style="height:450px;width: 100%"></div>
     </div>
 
 </template>

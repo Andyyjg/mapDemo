@@ -1,10 +1,64 @@
 // test.vue
 <template>
     <div>
-        <div id="container"></div>
-        <div id="top">
-            <chart :chartData='receivableAccepted' ></chart>
+        <el-tooltip class="item" effect="dark" content="点击打开图表" placement="top-start">
+            <el-button type="primary" @click="drawer=true" size="mini" icon="el-icon-arrow-up" style="position: absolute;z-index: 1400;bottom: 0;left: 50%;height: 35px"></el-button>
+        </el-tooltip>
+
+<!--        <div class='input-card'>-->
+<!--            <div class="input-item">-->
+<!--                <input type="checkbox" onclick="toggleScale(this)"/>比例尺-->
+<!--            </div>-->
+
+<!--            <div class="input-item">-->
+<!--                <input type="checkbox" id="toolbar" onclick="toggleToolBar(this)"/>工具条-->
+<!--            </div>-->
+
+<!--            <div class="input-item">-->
+<!--                <input type="checkbox" id="toolbarDirection" disabled onclick="toggleToolBarDirection(this)"/>工具条方向盘-->
+<!--            </div>-->
+
+<!--            <div class="input-item">-->
+<!--                <input type="checkbox" id="toolbarRuler" disabled onclick="toggleToolBarRuler(this)"/>工具条标尺-->
+<!--            </div>-->
+
+<!--            <div class="input-item">-->
+<!--                <input type="checkbox" id="overview" onclick="toggleOverViewShow(this)"/>显示鹰眼-->
+<!--            </div>-->
+
+<!--            <div class="input-item">-->
+<!--                <input type="checkbox" id="overviewOpen" disabled onclick="toggleOverViewOpen(this)"/>展开鹰眼-->
+<!--            </div>-->
+<!--        </div>-->
+        <div id="myPageTop" style="position: absolute;top: 20px;right: 50px;background: #fff;z-index: 2000">
+            <table>
+
+                <tr>
+                    <td>
+                        <input v-model="input" id="tipinput" class="search-input" placeholder="请输入地址或关联街道"
+                               @input="searchAddress"/>
+                        <button class="search-btn" @click="searchAddress">地块定位</button>
+                        <div id="panel" style="position: absolute;z-index: 1000" v-if="showSuggest"></div>
+                    </td>
+                </tr>
+
+            </table>
         </div>
+        <div id="container" @click.stop.prevent="showSuggest=false"></div>
+
+        <el-drawer
+                :visible.sync="drawer"
+
+                :direction="direction"
+                :before-close="handleClose">
+                <div style="padding-right: 40px">
+                    <chart :chartData='receivableAccepted'></chart>
+                </div>
+
+
+
+        </el-drawer>
+
     </div>
 
 
@@ -14,14 +68,19 @@
     import AMapUI from 'AMapUI'
     import Loca from 'Loca'
     import chart from '../components/chart'
-    import {heatmapData, locationArr,chartDataOption} from '../lib/data'
-
-
+    import {heatmapData, locationArr, chartDataOption} from '../lib/data'
+    // var jsonData=require('../assets/json/grid')
+    // console.log('这是data',jsonData.data);
+    var placeSearch
     export default {
         components: {chart},
         name: 'test',
         data() {
             return {
+                drawer:false,
+                direction:'btt',
+                showSuggest: true,
+                input: '',
                 show: false,
                 map: null,
                 heatmapData,
@@ -29,9 +88,27 @@
                 receivableAccepted: chartDataOption
 
 
-        }
+            }
         },
         methods: {
+            handleClose(done) {
+                done()
+            },
+            searchAddress() {
+                this.showSuggest = true
+                if (!this.input) {
+                    return
+                }
+                placeSearch.search(this.input);
+
+            },
+            //地点搜索及选择
+            selectAddress(e) {
+                //这里获得点选地点的经纬度
+                let location = e.selected.data.location;
+
+                // Do Something
+            },
 
 
             openInfo(e, item) {
@@ -61,12 +138,31 @@
                     showZoomBar: true,
                     resizeEnable: true,
                 })
+
+                //输入提示
+                AMap.service(["AMap.PlaceSearch"], function () {
+                    //构造地点查询类
+                    placeSearch = new AMap.PlaceSearch({
+                        pageSize: 4, // 单页显示结果条数
+                        pageIndex: 1, // 页码
+                        citylimit: false,  //是否强制限制在设置的城市内搜索
+                        map: that.map, // 展现结果的地图实例
+                        panel: "panel", // 结果列表将在此容器中进行展示。
+                        autoFitView: true, // 是否自动调整地图视野使绘制的 Marker点都处于视口的可见范围
+                        renderStyle: 'default'
+                    });
+
+                });
+                console.log('event5', AMap.event);
+                // 添加列表点选监听事件
+                AMap.event.addListener(placeSearch, "selectChanged", this.selectAddress);
+
                 this.dealHeat()
                 //toolbar组件加载
-                AMap.plugin('AMap.ToolBar', function () {//异步加载插件
-                    var toolbar = new AMap.ToolBar();
-                    that.map.addControl(toolbar);
-                });
+                // AMap.plugin('AMap.ToolBar', function () {//异步加载插件
+                //     var toolbar = new AMap.ToolBar();
+                //     that.map.addControl(toolbar);
+                // });
 
                 //设置marker标记
                 this.locationArr.forEach((item, key) => {
@@ -179,7 +275,7 @@
 
     #container {
         width: 100%;
-        height: 65vh;
+        height: 100vh;
     }
 
     .custom-content-marker {
@@ -256,5 +352,87 @@
         z-index: 100 !important;
     }
 
+    #panel {
+        position: absolute;
+
+        max-height: 500px;
+        overflow-y: auto;
+        top: 37px;
+        left: 0;
+        width: 250px;
+    }
+
+    .search-input {
+
+        width: 250px;
+        height: 35px;
+        font-size: 12px;
+        background: #38497A;
+        box-sizing: border-box;
+        border: none;
+        line-height: 35px;
+        text-indent: 20px;
+        background-clip: padding-box, border-box;
+        color: #ffffff;
+        background-origin: padding-box, border-box;
+
+    }
+
+    .search-btn {
+        width: 70px;
+        height: 35px;
+        border: none;
+        background: linear-gradient(to right, #3C55B6 0%, #4B4AB5 100%);
+        border-radius-topleft: 2px;
+        border-radius-bottomleft: 2px;
+        color: #ffffff;
+        outline: none;
+        cursor: pointer;
+        font-size: 12px;
+    }
+
+    ::-webkit-input-placeholder { /* Chrome/Opera/Safari */
+        color: #5E7093;
+        font-size: 14px;
+    }
+
+    ::-moz-placeholder { /* Firefox 19+ */
+        color: #5E7093;
+        font-size: 14px;
+    }
+
+    :-ms-input-placeholder { /* IE 10+ */
+        color: #5E7093;
+        font-size: 14px;
+        font-weight: 300;
+    }
+
+    :-moz-placeholder { /* Firefox 18- */
+        color: #5E7093;
+        font-size: 14px;
+    }
+
+    .input-card {
+        padding: 15px;
+        position: absolute;
+        left: 30px;
+        top: 20px;
+        width: 100px;
+        z-index: 1300;
+        background: #8F9BC6;
+        color: #ffffff;
+        bottom: auto;
+
+        border-radius: 10px;
+    }
+    .input-card .input-item{
+        margin-top: 15px;
+        margin-bottom: 15px;
+    }
+    div.el-drawer{
+        height: 500px!important;
+        background: #15172B!important;
+
+    }
 
 </style>
