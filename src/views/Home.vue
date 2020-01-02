@@ -150,7 +150,7 @@
                 that.map = new AMap.Map('container', {
                     center: centerPos,
                     mapStyle: 'amap://styles/37a3f303898c1642ec5e1aeab3e7ae95',
-                    zoom: 10,
+                    zoom: 8,
                     viewMode: '2D',
                     pitch: 50,
                     showZoomBar: true,
