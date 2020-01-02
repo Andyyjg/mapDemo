@@ -2,41 +2,54 @@
 <template>
     <div>
         <el-tooltip class="item" effect="dark" content="点击打开图表" placement="top-start">
-            <el-button type="primary" @click="drawer=true" size="mini" icon="el-icon-arrow-up" style="position: absolute;z-index: 1400;bottom: 0;left: 50%;height: 35px"></el-button>
+            <el-button type="primary" @click="drawer=true" size="mini" icon="el-icon-arrow-up"
+                       style="position: absolute;z-index: 1400;bottom: 0;left: 50%;height: 35px"></el-button>
         </el-tooltip>
 
-<!--        <div class='input-card'>-->
-<!--            <div class="input-item">-->
-<!--                <input type="checkbox" onclick="toggleScale(this)"/>比例尺-->
-<!--            </div>-->
+        <!-- 图例 -->
+        <div class="legend">
+            <ul class="colors" id="legend-color">
+                <li class="color-item" v-for="(item,key) of colorArr" :style="{'background-color': item}" :key="key"></li>
+            </ul>
+            <ul class="labels" id="legend-label" style="padding: 0">
+                <li class="label-item" v-for="(item,key) of numRange" :key="key">{{item}}</li>`
+            </ul>
+        </div>
+        <img src="../assets/img/2.png" alt="" title="初始化地图" style="position: absolute;z-index: 1300;bottom: 70px;left: 15px;cursor:pointer;" width="50" @click="initmap">
 
-<!--            <div class="input-item">-->
-<!--                <input type="checkbox" id="toolbar" onclick="toggleToolBar(this)"/>工具条-->
-<!--            </div>-->
 
-<!--            <div class="input-item">-->
-<!--                <input type="checkbox" id="toolbarDirection" disabled onclick="toggleToolBarDirection(this)"/>工具条方向盘-->
-<!--            </div>-->
+        <!--        <div class='input-card'>-->
+        <!--            <div class="input-item">-->
+        <!--                <input type="checkbox" onclick="toggleScale(this)"/>比例尺-->
+        <!--            </div>-->
 
-<!--            <div class="input-item">-->
-<!--                <input type="checkbox" id="toolbarRuler" disabled onclick="toggleToolBarRuler(this)"/>工具条标尺-->
-<!--            </div>-->
+        <!--            <div class="input-item">-->
+        <!--                <input type="checkbox" id="toolbar" onclick="toggleToolBar(this)"/>工具条-->
+        <!--            </div>-->
 
-<!--            <div class="input-item">-->
-<!--                <input type="checkbox" id="overview" onclick="toggleOverViewShow(this)"/>显示鹰眼-->
-<!--            </div>-->
+        <!--            <div class="input-item">-->
+        <!--                <input type="checkbox" id="toolbarDirection" disabled onclick="toggleToolBarDirection(this)"/>工具条方向盘-->
+        <!--            </div>-->
 
-<!--            <div class="input-item">-->
-<!--                <input type="checkbox" id="overviewOpen" disabled onclick="toggleOverViewOpen(this)"/>展开鹰眼-->
-<!--            </div>-->
-<!--        </div>-->
-        <div id="myPageTop" style="position: absolute;top: 20px;right: 50px;background: #fff;z-index: 2000">
+        <!--            <div class="input-item">-->
+        <!--                <input type="checkbox" id="toolbarRuler" disabled onclick="toggleToolBarRuler(this)"/>工具条标尺-->
+        <!--            </div>-->
+
+        <!--            <div class="input-item">-->
+        <!--                <input type="checkbox" id="overview" onclick="toggleOverViewShow(this)"/>显示鹰眼-->
+        <!--            </div>-->
+
+        <!--            <div class="input-item">-->
+        <!--                <input type="checkbox" id="overviewOpen" disabled onclick="toggleOverViewOpen(this)"/>展开鹰眼-->
+        <!--            </div>-->
+        <!--        </div>-->
+        <div id="myPageTop" style="position: absolute;top: 20px;right: 100px;background: #fff;z-index: 2000">
             <table>
 
                 <tr>
                     <td>
-                        <input v-model="input" id="tipinput" class="search-input" placeholder="请输入地址或关联街道"
-                               @input="searchAddress"/>
+                        <input v-model="input" id="tipinput" class="search-input" placeholder="请输入关键词，点击按钮搜索"
+                        />
                         <button class="search-btn" @click="searchAddress">地块定位</button>
                         <div id="panel" style="position: absolute;z-index: 1000" v-if="showSuggest"></div>
                     </td>
@@ -51,10 +64,9 @@
 
                 :direction="direction"
                 :before-close="handleClose">
-                <div style="padding-right: 40px">
-                    <chart :chartData='receivableAccepted'></chart>
-                </div>
-
+            <div style="padding-right: 40px">
+                <chart :chartData='receivableAccepted'></chart>
+            </div>
 
 
         </el-drawer>
@@ -69,7 +81,11 @@
     import Loca from 'Loca'
     import chart from '../components/chart'
     import {heatmapData, locationArr, chartDataOption} from '../lib/data'
-    // var jsonData=require('../assets/json/grid')
+    var jsonData=require('../assets/json/grid')
+    jsonData.data.forEach((item,key)=>{
+        item.count=parseInt(Math.random(0,1)*10000+Math.random(0,1)*1000+Math.random(0,1)*100+Math.random(0,1)*10+key)
+    })
+    console.log(jsonData);
     // console.log('这是data',jsonData.data);
     var placeSearch
     export default {
@@ -77,15 +93,17 @@
         name: 'test',
         data() {
             return {
-                drawer:false,
-                direction:'btt',
+                drawer: false,
+                direction: 'btt',
                 showSuggest: true,
                 input: '',
                 show: false,
                 map: null,
                 heatmapData,
                 locationArr,
-                receivableAccepted: chartDataOption
+                receivableAccepted: chartDataOption,
+                colorArr:['rgb(33,38,59)', 'rgb(33,49,63)', 'rgb(49,43,45)', 'rgb(47,31,64)', 'rgb(43,33,49)', 'rgb(131,105,53)', 'rgb(122,26,34)'],
+                numRange:[10000,20000,30000,40000,50000,60000,70000]
 
 
             }
@@ -111,32 +129,79 @@
             },
 
 
-            openInfo(e, item) {
+            openInfo(e, info, code) {
                 //构建信息窗体中显示的内容
                 var infoWindow;
-                var info = [];
-                info.push("<h3 style='color: #ffffff;font-size: 15px;font-weight: 200;margin-bottom: 15px'>房价信息</h3>");
-                info.push(`<p class='input-item mb-3' >所在地区:${item.n}</p>`);
-                info.push(`<p class='input-item mb-3' >二手房价:${item.p}元/平方米</p>`);
-                info.push(`<p class='input-item mb-3' >新房房价:${item.p - 1233}元/平方米</p>`);
 
                 infoWindow = new AMap.InfoWindow({
                     content: info.join('')  //使用默认信息窗体框样式，显示信息内容
                 });
+                console.log(e.target)
+                if (code === 1) {
+                    infoWindow.open(this.map, e.target.getPosition());
+                } else {
+                    infoWindow.open(this.map, [e.lnglat.lng, e.lnglat.lat]);
+                }
 
-                infoWindow.open(this.map, e.target.getPosition());
             },
             initmap() {
-                let that = this
+                let that = this, centerPos = [113.49, 34.65]
 
                 that.map = new AMap.Map('container', {
-                    center: [120.05, 36.5],
+                    center: centerPos,
                     mapStyle: 'amap://styles/37a3f303898c1642ec5e1aeab3e7ae95',
-                    zoom: 10.5,
+                    zoom: 10,
                     viewMode: '2D',
                     pitch: 50,
                     showZoomBar: true,
                     resizeEnable: true,
+                })
+                //添加地图控件
+                AMap.plugin([
+                    'AMap.ToolBar',
+                    'AMap.Scale',
+                    'AMap.OverView',
+                    'AMap.MapType',
+                    'AMap.Geolocation',
+                ], function () {
+                    // 在图面添加工具条控件，工具条控件集成了缩放、平移、定位等功能按钮在内的组合控件
+                    that.map.addControl(new AMap.ToolBar());
+
+                    // 在图面添加比例尺控件，展示地图在当前层级和纬度下的比例尺
+                    that.map.addControl(new AMap.Scale());
+
+                    // 在图面添加鹰眼控件，在地图右下角显示地图的缩略图
+                    that.map.addControl(new AMap.OverView({isOpen: true}));
+
+                    // 在图面添加类别切换控件，实现默认图层与卫星图、实施交通图层之间切换的控制
+                    that.map.addControl(new AMap.MapType());
+
+                    // 在图面添加定位控件，用来获取和展示用户主机所在的经纬度位置
+
+                });
+
+                var marker = new AMap.Marker({
+                    icon: 'https://a.amap.com/jsapi_demos/static/demo-center/icons/poi-marker-default.png',
+                    position: centerPos
+                })
+                that.map.add([marker]);
+                that.map.on('click', function (e) {
+                    console.log(e);
+                    that.map.remove([marker])
+                    marker = new AMap.Marker({
+                        icon: 'https://a.amap.com/jsapi_demos/static/demo-center/icons/poi-marker-default.png',
+                        position: [e.lnglat.lng, e.lnglat.lat],
+                        offset: new AMap.Pixel(-10, -20)
+                    });
+
+                    that.map.add([marker]);
+                    var info = [];
+                    info.push("<h3 style='color: #ffffff;font-size: 15px;font-weight: 200;margin-bottom: 15px'>地理信息</h3>");
+                    info.push(`<p class='input-item mb-3' >当前经度:${e.lnglat.lng}</p>`);
+                    info.push(`<p class='input-item mb-3' >当前纬度:${e.lnglat.lat}</p>`);
+
+
+                    that.openInfo(e, info, 0)
                 })
 
                 //输入提示
@@ -183,8 +248,13 @@
                     });
                     marker.setzIndex(1300)
                     marker.on('click', function (e) {
+                        var info = [];
+                        info.push("<h3 style='color: #ffffff;font-size: 15px;font-weight: 200;margin-bottom: 15px'>房价信息</h3>");
+                        info.push(`<p class='input-item mb-3' >所在地区:${item.n}</p>`);
+                        info.push(`<p class='input-item mb-3' >二手房价:${item.p}元/平方米</p>`);
+                        info.push(`<p class='input-item mb-3' >新房房价:${item.p - 1233}元/平方米</p>`);
 
-                        that.openInfo(e, that.locationArr[key])
+                        that.openInfo(e, info, 1)
                     })
 
                     this.map.add(marker);
@@ -225,39 +295,44 @@
             },
             dealHeat() {
                 var that = this
-                this.$axios.get('//a.amap.com/Loca/static/mock/qingdao_500m.tsv').then(
-                    res => {
-                        var layer = new Loca.GridLayer({
-                            map: that.map,
-                            fitView: true
-                        });
+                // this.$axios.get('//a.amap.com/Loca/static/mock/qingdao_500m.tsv').then(
+                //     res => {
+                //
+                //     }
+                // )
+                var layer = new Loca.GridLayer({
+                    map: that.map,
+                    fitView: true
+                });
 
-                        layer.setData(res.data, {
-                            lnglat: function (obj) {
-                                var val = obj.value;
-                                return [val['lng'], val['lat']]
-                            },
-                            value: 'count',
-                            type: 'tsv'
-                        });
+                layer.setData(jsonData.data, {
+                    lnglat: function (obj) {
 
-                        layer.setOptions({
-                            unit: 'meter',
-                            mode: 'count',
-                            style: {
-                                color: ['rgb(33,38,59)', 'rgb(33,49,63)', 'rgb(49,43,45)', 'rgb(47,31,64)', 'rgb(43,33,49)', 'rgb(131,105,53)', 'rgb(122,26,34)'],
-                                radius: 600,
-                                opacity: 0.9,
-                                gap: 150,
-                                height: [0, 0],
-                                zIndex: 100
-                            }
-                        });
+                        var val = obj.value;
+                        return [val['XMin'], val['YMin']]
+                    },
+                    value: 'count',
+                    type: 'json'
+                });
 
-                        layer.render();
+                layer.setOptions({
+                    unit: 'meter',
+                    mode: 'count',
+                    style: {
+                        color: that.colorArr,
+                        radius: 600,
+                        opacity: 0.9,
+                        gap: 150,
+                        height: [10, 10],
+                        zIndex: 100
                     }
-                )
+                });
+
+                layer.render();
+
             }
+
+
         },
 
         mounted() {
@@ -371,7 +446,7 @@
         box-sizing: border-box;
         border: none;
         line-height: 35px;
-        text-indent: 20px;
+        text-indent: 5px;
         background-clip: padding-box, border-box;
         color: #ffffff;
         background-origin: padding-box, border-box;
@@ -425,14 +500,46 @@
 
         border-radius: 10px;
     }
-    .input-card .input-item{
+
+    .input-card .input-item {
         margin-top: 15px;
         margin-bottom: 15px;
     }
-    div.el-drawer{
-        height: 500px!important;
-        background: #15172B!important;
 
+    div.el-drawer {
+        height: 500px !important;
+        background: #15172B !important;
+
+    }
+    .legend {
+        z-index: 1300;
+        position: fixed;
+        bottom: 20px;
+        right: 120px;
+        background: transparent;
+        border-radius: 5px;
+        /*box-shadow: 0 0 5px rgba(0, 0, 0, 0.9);*/
+    }
+
+    .legend ul {
+        padding: 5px 20px;
+        margin: 0;
+        list-style: none;
+    }
+
+    .color-item {
+        width: 67px;
+        height: 20px;
+        display: inline-block;
+    }
+
+    .label-item {
+        color: #ffffff;
+        display: inline-block;
+        width: 67px;
+        text-align: center;
+        margin-left: -4px;
+        font-size: 14px;
     }
 
 </style>
