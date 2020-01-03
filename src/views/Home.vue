@@ -87,10 +87,13 @@
     import {heatmapData, locationArr, chartDataOption, randomNum} from '../lib/data'
 
     var jsonData = require('../assets/json/grid')
+
     jsonData.data.forEach((item, key) => {
-        item.count = randomNum(0, 70000)
+
+        item['count'] = randomNum(0, 70000)
+
     })
-    console.log(jsonData);
+
     // console.log('这是data',jsonData.data);
     var placeSearch
     export default {
@@ -219,21 +222,17 @@
                         citylimit: false,  //是否强制限制在设置的城市内搜索
                         map: that.map, // 展现结果的地图实例
                         panel: "panel", // 结果列表将在此容器中进行展示。
-                        autoFitView: true, // 是否自动调整地图视野使绘制的 Marker点都处于视口的可见范围
+                        autoFitView: true,  //是否自动调整地图视野使绘制的 Marker点都处于视口的可见范围
                         renderStyle: 'default'
                     });
 
                 });
-                console.log('event5', AMap.event);
+
                 // 添加列表点选监听事件
                 AMap.event.addListener(placeSearch, "selectChanged", this.selectAddress);
 
                 this.dealHeat()
-                //toolbar组件加载
-                // AMap.plugin('AMap.ToolBar', function () {//异步加载插件
-                //     var toolbar = new AMap.ToolBar();
-                //     that.map.addControl(toolbar);
-                // });
+
 
                 //设置marker标记
                 this.locationArr.forEach((item, key) => {
@@ -287,12 +286,12 @@
                         return [val['XMin'], val['YMin']]
                     },
                     value: 'count',
-                    type: 'json'
+
                 });
 
                 layer.setOptions({
                     unit: 'meter',
-                    mode: 'count',
+                    mode: 'sum',
                     style: {
                         color: that.colorArr,
                         radius: 666,
