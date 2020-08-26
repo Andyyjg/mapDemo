@@ -17,36 +17,13 @@
                 `
             </ul>
         </div>
+        <el-button type="primary" @click="drawRectangle">绘制</el-button>
+        <el-button type="primary" @click="clearRatacle">清除</el-button>
         <img src="../assets/img/2.png" alt="" title="初始化地图"
              style="position: absolute;z-index: 1300;bottom: 70px;left: 15px;cursor:pointer;" width="50"
              @click="initmap">
 
 
-        <!--        <div class='input-card'>-->
-        <!--            <div class="input-item">-->
-        <!--                <input type="checkbox" onclick="toggleScale(this)"/>比例尺-->
-        <!--            </div>-->
-
-        <!--            <div class="input-item">-->
-        <!--                <input type="checkbox" id="toolbar" onclick="toggleToolBar(this)"/>工具条-->
-        <!--            </div>-->
-
-        <!--            <div class="input-item">-->
-        <!--                <input type="checkbox" id="toolbarDirection" disabled onclick="toggleToolBarDirection(this)"/>工具条方向盘-->
-        <!--            </div>-->
-
-        <!--            <div class="input-item">-->
-        <!--                <input type="checkbox" id="toolbarRuler" disabled onclick="toggleToolBarRuler(this)"/>工具条标尺-->
-        <!--            </div>-->
-
-        <!--            <div class="input-item">-->
-        <!--                <input type="checkbox" id="overview" onclick="toggleOverViewShow(this)"/>显示鹰眼-->
-        <!--            </div>-->
-
-        <!--            <div class="input-item">-->
-        <!--                <input type="checkbox" id="overviewOpen" disabled onclick="toggleOverViewOpen(this)"/>展开鹰眼-->
-        <!--            </div>-->
-        <!--        </div>-->
         <div id="myPageTop" style="position: absolute;top: 20px;right: 100px;background: #fff;z-index: 2000">
             <table>
 
@@ -86,7 +63,8 @@
     import chart from '../components/chart'
     import {heatmapData, locationArr, chartDataOption, randomNum} from '../lib/data'
 
-    var jsonData = require('../assets/json/grid')
+     var data= require('../assets/json/grid')
+    var jsonData =JSON.parse(JSON.stringify(data))
 
     jsonData.data.forEach((item, key) => {
 
@@ -110,14 +88,79 @@
                 heatmapData,
                 locationArr,
                 receivableAccepted: chartDataOption,
-                colorArr:  ['#0868AC', '#43A2CA', '#43A2CA', '#7BCCC4', '#BAE4BC', '#F0F9E8', '#F0F9E8'],
-                numRange: [0, 10000, 20000, 30000, 40000, 50000, 60000, 70000]
+                colorArr: ['#0868AC', '#43A2CA', '#43A2CA', '#7BCCC4', '#BAE4BC', '#F0F9E8', '#F0F9E8'],
+                numRange: [0, 10000, 20000, 30000, 40000, 50000, 60000, 70000],
+                canDraw: false
 
 
             }
         },
         methods: {
+            inintMouseTool() {
+                this.mouseTool = new AMap.MouseTool(this.map)
+                var overlays = [];
 
+                this.mouseTool.on('draw', (e)=>{
+                    console.log(this.map);
+
+                    overlays = [];
+                    // var overlaysList = this.map.getAllOverlays('polygon')
+                    // console.log('over',overlaysList);
+                    var overlayPath = [];	//覆盖物路径
+                    var bounds = e.obj.getBounds();
+                    var southWest = bounds.getSouthWest();
+                    var northEast = bounds.getNorthEast();
+                    if(southWest.equals(northEast)){
+                        return;
+                    }
+                    overlayPath = e.obj.getPath();
+                    console.log('overlayPath',overlayPath);
+                    jsonData.data.forEach(item=>{
+
+                        let point=new AMap.LngLat(item.XMin,item.YMin)
+                        // console.log('point',point);
+
+                        var isPointInRing =  AMap.GeometryUtil.isPointInRing(point,overlayPath);//bounds.contains(point);
+                        console.log(isPointInRing);
+                        if(isPointInRing){
+                            item.selected=true
+                        }
+                        // else{
+                        //     item.selected=false
+                        // }
+                        // if(isPointInRing){
+                        //     item.select=true
+                        // }
+                    })
+                    // console.log(jsonData.data);
+                    this.clearRatacle()
+                    setTimeout(()=>{
+                        this.dealHeat()
+                    },3000)
+
+                })
+            },
+            clearRatacle() {
+                this.mouseTool.close(true)
+            },
+            //绘制矩形
+            drawRectangle() {
+                this.canDraw = true
+
+                this.mouseTool.rectangle({
+                    strokeColor: 'red',
+                    strokeOpacity: 0.5,
+                    strokeWeight: 1,
+                    fillColor: 'blue',
+                    fillOpacity: 0.5,
+                    // strokeStyle还支持 solid
+                    strokeStyle: 'solid',
+                    // strokeDasharray: [30,10],
+                })
+
+
+                this.canDraw = false
+            },
             handleClose(done) {
                 done()
             },
@@ -189,83 +232,86 @@
 
                 });
 
-                var marker = new AMap.Marker({
-                    icon: 'https://a.amap.com/jsapi_demos/static/demo-center/icons/poi-marker-default.png',
-                    position: centerPos
-                })
-                that.map.add([marker]);
-                that.map.on('click', function (e) {
-                    console.log(e);
-                    that.map.remove([marker])
-                    marker = new AMap.Marker({
-                        icon: 'https://a.amap.com/jsapi_demos/static/demo-center/icons/poi-marker-default.png',
-                        position: [e.lnglat.lng, e.lnglat.lat],
-                        offset: new AMap.Pixel(-10, -20)
-                    });
-
-                    that.map.add([marker]);
-                    var info = [];
-                    info.push("<h3 style='color: #ffffff;font-size: 15px;font-weight: 200;margin-bottom: 15px'>地理信息</h3>");
-                    info.push(`<p class='input-item mb-3' >当前经度:${e.lnglat.lng}</p>`);
-                    info.push(`<p class='input-item mb-3' >当前纬度:${e.lnglat.lat}</p>`);
-
-
-                    that.openInfo(e, info, 0)
-                })
-
-                //输入提示
-                AMap.service(["AMap.PlaceSearch"], function () {
-                    //构造地点查询类
-                    placeSearch = new AMap.PlaceSearch({
-                        pageSize: 4, // 单页显示结果条数
-                        pageIndex: 1, // 页码
-                        citylimit: false,  //是否强制限制在设置的城市内搜索
-                        map: that.map, // 展现结果的地图实例
-                        panel: "panel", // 结果列表将在此容器中进行展示。
-                        autoFitView: true,  //是否自动调整地图视野使绘制的 Marker点都处于视口的可见范围
-                        renderStyle: 'default'
-                    });
-
-                });
-
-                // 添加列表点选监听事件
-                AMap.event.addListener(placeSearch, "selectChanged", this.selectAddress);
+                // var marker = new AMap.Marker({
+                //     icon: 'https://a.amap.com/jsapi_demos/static/demo-center/icons/poi-marker-default.png',
+                //     position: centerPos
+                // })
+                // that.map.add([marker]);
+                // that.map.on('click', function (e) {
+                //     console.log(e);
+                //     that.map.remove([marker])
+                //     marker = new AMap.Marker({
+                //         icon: 'https://a.amap.com/jsapi_demos/static/demo-center/icons/poi-marker-default.png',
+                //         position: [e.lnglat.lng, e.lnglat.lat],
+                //         offset: new AMap.Pixel(-10, -20)
+                //     });
+                //
+                //     that.map.add([marker]);
+                //     var info = [];
+                //     info.push("<h3 style='color: #ffffff;font-size: 15px;font-weight: 200;margin-bottom: 15px'>地理信息</h3>");
+                //     info.push(`<p class='input-item mb-3' >当前经度:${e.lnglat.lng}</p>`);
+                //     info.push(`<p class='input-item mb-3' >当前纬度:${e.lnglat.lat}</p>`);
+                //
+                //
+                //     that.openInfo(e, info, 0)
+                // })
+                //
+                // //输入提示
+                // AMap.service(["AMap.PlaceSearch"], function () {
+                //     //构造地点查询类
+                //     placeSearch = new AMap.PlaceSearch({
+                //         pageSize: 4, // 单页显示结果条数
+                //         pageIndex: 1, // 页码
+                //         citylimit: false,  //是否强制限制在设置的城市内搜索
+                //         map: that.map, // 展现结果的地图实例
+                //         panel: "panel", // 结果列表将在此容器中进行展示。
+                //         autoFitView: true,  //是否自动调整地图视野使绘制的 Marker点都处于视口的可见范围
+                //         renderStyle: 'default'
+                //     });
+                //
+                // });
+                //
+                // // 添加列表点选监听事件
+                // AMap.event.addListener(placeSearch, "selectChanged", this.selectAddress);
 
                 this.dealHeat()
+                setTimeout(()=>{
+                    this.inintMouseTool()
+                })
 
 
                 //设置marker标记
-                this.locationArr.forEach((item, key) => {
-                    var marker = null
-
-                    var content =
-                        `<div class="custom-content-marker image" data_id="${key}" >
-                        <img src="https://webapi.amap.com/theme/v1.3/markers/b/mark_bs.png" >
-                            <span class="tip-title" >${key + 1}</span>
-                            </div>`
-                    marker = new AMap.Marker({
-                        position: new AMap.LngLat(item.l, item.h),   // 经纬度对象，也可以是经纬度构成的一维数组[116.39, 39.9]
-                        title: key + 1,
-                        content: content,
-                        draggable: true
-
-
-                    });
-                    marker.setzIndex(1300)
-                    marker.on('click', function (e) {
-                        var info = [];
-                        info.push("<h3 style='color: #ffffff;font-size: 15px;font-weight: 200;margin-bottom: 15px'>房价信息</h3>");
-                        info.push(`<p class='input-item mb-3' >所在地区:${item.n}</p>`);
-                        info.push(`<p class='input-item mb-3' >二手房价:${item.p}元/平方米</p>`);
-                        info.push(`<p class='input-item mb-3' >新房房价:${item.p - 1233}元/平方米</p>`);
-
-                        that.openInfo(e, info, 1)
-                    })
-
-                    this.map.add(marker);
-
-
-                })
+                // this.locationArr.forEach((item, key) => {
+                //     var marker = null
+                //
+                //     var content =
+                //         `<div class="custom-content-marker image" data_id="${key}" >
+                //         <img src="https://webapi.amap.com/theme/v1.3/markers/b/mark_bs.png" >
+                //             <span class="tip-title" >${key + 1}</span>
+                //             </div>`
+                //     marker = new AMap.Marker({
+                //         position: new AMap.LngLat(item.l, item.h),   // 经纬度对象，也可以是经纬度构成的一维数组[116.39, 39.9]
+                //         title: key + 1,
+                //         content: content,
+                //         draggable: true
+                //
+                //
+                //     });
+                //     marker.setzIndex(1300)
+                //     marker.on('click', function (e) {
+                //         var info = [];
+                //         info.push("<h3 style='color: #ffffff;font-size: 15px;font-weight: 200;margin-bottom: 15px'>房价信息</h3>");
+                //         info.push(`<p class='input-item mb-3' >所在地区:${item.n}</p>`);
+                //         info.push(`<p class='input-item mb-3' >二手房价:${item.p}元/平方米</p>`);
+                //         info.push(`<p class='input-item mb-3' >新房房价:${item.p - 1233}元/平方米</p>`);
+                //
+                //         that.openInfo(e, info, 1)
+                //     })
+                //
+                //     this.map.add(marker);
+                //
+                //
+                // })
 
                 // this.setheat(AMap)
 
@@ -274,14 +320,14 @@
 
             dealHeat() {
                 var that = this
-                var layer = new Loca.GridLayer({
+                this.layer && this.map.remove(this.layer)
+                this.layer = new Loca.GridLayer({
                     map: that.map,
                     fitView: true
                 });
-
-                layer.setData(jsonData.data, {
+                // console.log('获取数据',jsonData.data);
+                this.layer.setData(jsonData.data, {
                     lnglat: function (obj) {
-
                         var val = obj.value;
                         return [val['XMin'], val['YMin']]
                     },
@@ -289,20 +335,23 @@
 
                 });
 
-                layer.setOptions({
+                this.layer.setOptions({
                     unit: 'meter',
                     mode: 'sum',
                     style: {
-                        color: that.colorArr,
+                        color: (res) => {
+                            console.log(res);
+                            return res.rawData[0].selected?'red':'blue'
+                        },
                         radius: 666,
                         opacity: 0.2,
-                        gap: 200,
+                        gap: 100,
                         height: [0, 0],
                         zIndex: 100
                     }
                 });
 
-                layer.render();
+                this.layer.render();
 
             }
 
